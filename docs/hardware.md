@@ -19,9 +19,9 @@ Measured on the phone (kernel 7.2.9 from the pmOS port, U-Boot `linux-only`).
 | Kernel features | Landlock on | | own kernel build (`tools/build-kernel.sh`, Alpine clang like pmOS); pacman's download sandbox works again |
 | Modem data | in progress | no | IPA fixed in the device tree (`rmnet_ipa0` comes up), ModemManager creates the modem, `msm-modem` selects the SIM; both slots report no card (no-atr-received) |
 | Calls, SMS | not yet | no | after modem data; voice audio needs q6voiced and UCM work |
-| Vibration (Awinic AW8624) | in progress | no | no mainline driver; the stock DT puts it on SE4 with GPIO 20/21, which the mainline pinctrl does not offer for SE4 |
+| Vibration (Awinic AW8624) | driver written, not yet tested | no | on i2c4 (SE4, GPIO 16/17) once the pins get the stock pull-up; the chip vibrates in CONT mode driven by hand. New mainline driver `aw8624` (force feedback, CONT mode, stock motor tuning) waiting for a test on the phone |
 | Microphones, headset | not yet | no | WCD9370 codec (mainline driver wcd937x) on SoundWire with the LPASS TX/RX macros: device tree work, no new driver |
-| Fingerprint (FPC1020, side key) | not possible for now | no | read through a TrustZone app on Android; no Linux path |
+| Fingerprint (FPC1540, side key) | under study | no | the sensor's SPI bus belongs to TrustZone; the stock HAL drives it through the `fpclisa` TrustZone app. Protocol mapped in [fingerprint-re.md](fingerprint-re.md); blocker: loading that app from mainline Linux |
 | Focus motor (DW9800) | not yet | no | |
 
 ## How a change reaches the phone
