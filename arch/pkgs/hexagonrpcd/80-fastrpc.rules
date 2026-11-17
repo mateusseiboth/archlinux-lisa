@@ -1,0 +1,2 @@
+# hexagonrpcd runs as fastrpc and serves the DSP's remote file system calls.
+SUBSYSTEM=="misc", KERNEL=="fastrpc-*", GROUP="fastrpc", MODE="0660"

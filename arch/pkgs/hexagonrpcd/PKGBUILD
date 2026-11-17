@@ -1,0 +1,29 @@
+# FastRPC server for the Qualcomm DSPs: the ADSP sensors PD loads the sensor
+# registry and configs from /usr/share/qcom (lisa-firmware) through it, which
+# libssc and iio-sensor-proxy need. Not packaged by Arch Linux ARM.
+pkgname=hexagonrpcd
+pkgver=0.5.0
+pkgrel=1
+pkgdesc="Qualcomm Hexagon FastRPC server"
+arch=(aarch64)
+url="https://github.com/linux-msm/hexagonrpc"
+license=(GPL-3.0-or-later)
+depends=(glibc)
+makedepends=(meson linux-api-headers)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+	fastrpc.sysusers
+	80-fastrpc.rules)
+sha256sums=('2173985932ab68d8ac593f9954357123bdbbbe9ba5f1b17a098d9cbcec22c5d5'
+	'8fb5646ce24b4790dbd63de56ab4da6daca77a7cc43716174a33f6c8d8b74261'
+	'be6f123df0c739f0a70ee8fe77f1cb0e8db372b97ea414f5874bfec251767ddd')
+
+build() {
+	arch-meson "hexagonrpc-$pkgver" build
+	meson compile -C build
+}
+
+package() {
+	meson install -C build --destdir "$pkgdir"
+	install -Dm644 fastrpc.sysusers "$pkgdir/usr/lib/sysusers.d/fastrpc.conf"
+	install -Dm644 80-fastrpc.rules "$pkgdir/usr/lib/udev/rules.d/80-fastrpc.rules"
+}

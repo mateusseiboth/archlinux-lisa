@@ -27,6 +27,8 @@ cp -a /src/arch /src/common "$BUILD/src/"
 cp -a /bsp "$BUILD/bsp"
 find /out -maxdepth 1 -name '*.pkg.tar.*' -exec cp -n {} "$BUILD/repo/" \;
 
+# Everything newer than this mark leaves for /out, split packages included.
+touch "$BUILD/.started"
 mountpoint -q "$ROOTFS" || mount --bind "$ROOTFS" "$ROOTFS"
 mkdir -p /cache/pacman-pkg
 mount --bind /cache/pacman-pkg "$ROOTFS/var/cache/pacman/pkg"
@@ -35,7 +37,5 @@ arch-chroot "$ROOTFS" env LISA_KVER="$LISA_KVER" \
 umount "$ROOTFS/var/cache/pacman/pkg"
 umount "$ROOTFS"
 
-for name in "$@"; do
-	cp "$(find "$BUILD/repo" -maxdepth 1 -name "$name-[0-9]*.pkg.tar.*" | sort -V | tail -n 1)" /out/
-done
+find "$BUILD/repo" -maxdepth 1 -name '*.pkg.tar.*' -newer "$BUILD/.started" -exec cp {} /out/ \;
 chown "$HOST_UID:$HOST_GID" /out/*
