@@ -58,7 +58,8 @@ Output in `out/arch/`: `rootfs.img`, plus `boot.img`, `vendor_boot.img` and
 `dtbo.img` for booting without U-Boot. The build uses half of the CPU cores by
 default (`LISA_BUILD_CPUS` changes it).
 
-User `alarm`, password `147147` (`LISA_PASSWORD` at build time changes it).
+The phone user is named after the user running the build (`LISA_USER` changes
+it), password `147147` (`LISA_PASSWORD`).
 
 ## Install
 
@@ -70,4 +71,4 @@ User `alarm`, password `147147` (`LISA_PASSWORD` at build time changes it).
    `dd if=out/arch/rootfs.img of=/dev/sdX33 bs=4M oflag=direct status=progress`.
 3. Eject the disk on the PC: the phone restarts into Arch Linux.
 
-Over USB, the phone answers at `ssh alarm@172.16.42.1`.
+Over USB, the phone answers at `ssh <user>@172.16.42.1`.

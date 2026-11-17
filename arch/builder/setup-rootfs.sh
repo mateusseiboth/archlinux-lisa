@@ -3,7 +3,7 @@
 # packages, installs them with the selected UI components and configures the system.
 #
 # Env: LISA_UI (space-separated component directories under arch/ui, for example
-# "sddm plasma-mobile phosh"), LISA_KVER, LISA_PASSWORD.
+# "sddm plasma-mobile phosh"), LISA_KVER, LISA_USER, LISA_PASSWORD.
 set -euo pipefail
 
 BUILD=/var/tmp/lisa-build
@@ -11,6 +11,7 @@ SRC=$BUILD/src
 export LISA_BSP=$BUILD/bsp
 export LISA_COMMON=$SRC/common
 export LISA_KVER
+LISA_USER=${LISA_USER:?LISA_USER não definido}
 
 # Built in this order: rmtfs and tqftpserv link against qrtr.
 NATIVE_PKGS=(qrtr rmtfs tqftpserv qbootctl)
@@ -116,13 +117,21 @@ enable_services() {
 	systemctl mask systemd-networkd-wait-online.service NetworkManager-wait-online.service
 }
 
+# The Arch Linux ARM tarball ships the user alarm (uid 1000); it becomes LISA_USER.
+rename_default_user() {
+	[ "$LISA_USER" != alarm ] || return 0
+	usermod -l "$LISA_USER" -d "/home/$LISA_USER" -m -c "$LISA_USER" alarm
+	groupmod -n "$LISA_USER" alarm
+}
+
 configure_system() {
 	echo lisa >/etc/hostname
 	sed -i 's/^#\(en_US.UTF-8\)/\1/; s/^#\(pt_BR.UTF-8\)/\1/' /etc/locale.gen
 	locale-gen
 	echo LANG=en_US.UTF-8 >/etc/locale.conf
-	echo "alarm:$LISA_PASSWORD" | chpasswd
-	usermod -aG wheel,video,audio,input,network alarm
+	rename_default_user
+	echo "$LISA_USER:$LISA_PASSWORD" | chpasswd
+	usermod -aG wheel,video,audio,input,network "$LISA_USER"
 	echo '%wheel ALL=(ALL:ALL) ALL' >/etc/sudoers.d/10-wheel
 	chmod 440 /etc/sudoers.d/10-wheel
 	printf 'PARTLABEL=%s / ext4 rw,relatime 0 1\n' userdata >/etc/fstab

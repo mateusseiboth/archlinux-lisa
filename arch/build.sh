@@ -15,6 +15,8 @@ UI=${*:-sddm plasma-mobile phosh}
 OUT=$REPO_ROOT/out/arch
 BSP=$REPO_ROOT/out/bsp
 BUILDER_IMAGE=docker.io/library/archlinux:latest
+# The phone user is named after whoever builds the image, unless LISA_USER says otherwise.
+USER_NAME=${LISA_USER:-$(id -un)}
 PASSWORD=${LISA_PASSWORD:-147147}
 
 die() {
@@ -44,6 +46,7 @@ nice -n 10 docker run --rm --privileged \
 	-v "$OUT:/out" \
 	-e LISA_UI="$UI" \
 	-e LISA_KVER="$(cat "$BSP/kernel/kernel.release")" \
+	-e LISA_USER="$USER_NAME" \
 	-e LISA_PASSWORD="$PASSWORD" \
 	-e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
 	--security-opt label=disable \

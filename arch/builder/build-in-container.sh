@@ -4,7 +4,7 @@
 # and writes the images to /out.
 #
 # Mounts: /src (repository, read-only), /bsp (extracted BSP), /cache, /work, /out.
-# Env: LISA_UI, LISA_KVER, LISA_PASSWORD, HOST_UID, HOST_GID.
+# Env: LISA_UI, LISA_KVER, LISA_USER, LISA_PASSWORD, HOST_UID, HOST_GID.
 set -euo pipefail
 
 ALARM_URL=http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz
@@ -49,7 +49,7 @@ run_setup() {
 	# Packages survive between builds and stay out of the image.
 	mkdir -p /cache/pacman-pkg
 	mount --bind /cache/pacman-pkg "$ROOTFS/var/cache/pacman/pkg"
-	arch-chroot "$ROOTFS" env LISA_UI="$LISA_UI" LISA_KVER="$LISA_KVER" LISA_PASSWORD="$LISA_PASSWORD" \
+	arch-chroot "$ROOTFS" env LISA_UI="$LISA_UI" LISA_KVER="$LISA_KVER" LISA_USER="$LISA_USER" LISA_PASSWORD="$LISA_PASSWORD" \
 		bash /var/tmp/lisa-build/src/arch/builder/setup-rootfs.sh
 	umount "$ROOTFS/var/cache/pacman/pkg"
 	umount "$ROOTFS"
