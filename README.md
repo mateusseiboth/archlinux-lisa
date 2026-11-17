@@ -66,6 +66,11 @@ bash arch/build-packages.sh lisa-device hexagonrpcd   # -> out/arch/pkgs/
 bash arch/deploy.sh out/arch/pkgs/lisa-device-*.pkg.tar.*
 ```
 
+A device tree change reaches the phone through vendor_boot_a (the ABL hands
+its DTB to U-Boot and Linux): `tools/flash-dtb.sh <dtb>` writes a DTB-only
+vendor_boot over SSH, keeps the old one in `out/vendor_boot-backup/` and reads
+the new one back.
+
 Output in `out/arch/`: `rootfs.img`, plus `boot.img`, `vendor_boot.img` and
 `dtbo.img` for booting without U-Boot. The build uses every CPU core
 (`LISA_BUILD_CPUS` limits it).
