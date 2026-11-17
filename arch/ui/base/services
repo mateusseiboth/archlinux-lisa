@@ -13,3 +13,4 @@ sshd
 systemd-networkd
 systemd-timesyncd
 tqftpserv
+waydroid-container
