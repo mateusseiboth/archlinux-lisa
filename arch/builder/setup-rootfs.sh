@@ -13,14 +13,14 @@ export LISA_COMMON=$SRC/common
 export LISA_KVER
 LISA_USER=${LISA_USER:?LISA_USER não definido}
 
+# shellcheck source=arch/builder/makepkg-lib.sh
+. "$SRC/arch/builder/makepkg-lib.sh"
+
 # Built in this order: rmtfs and tqftpserv link against qrtr.
 NATIVE_PKGS=(qrtr rmtfs tqftpserv qbootctl)
 BSP_PKGS=(lisa-firmware lisa-device linux-lisa)
-MAKEDEPENDS=(base-devel meson linux-api-headers systemd)
-
-log() {
-	echo "==> $*"
-}
+# The PKGBUILDs' own makedepends come through install_build_deps.
+MAKEDEPENDS=(base-devel)
 
 read_list() {
 	[ -f "$1" ] || return 0
@@ -44,18 +44,6 @@ read_component_lists() {
 	done
 }
 
-prepare_pacman() {
-	# qemu-user has no landlock and the build volume confuses the space check.
-	sed -i 's/^CheckSpace/#CheckSpace/' /etc/pacman.conf
-	grep -q '^DisableSandbox' /etc/pacman.conf || sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf
-	pacman-key --init
-	pacman-key --populate archlinuxarm
-}
-
-restore_pacman() {
-	sed -i 's/^#CheckSpace/CheckSpace/; /^DisableSandbox$/d' /etc/pacman.conf
-}
-
 # The generic image kernel and its boot files are useless on lisa.
 remove_generic_kernel() {
 	local generic
@@ -63,20 +51,9 @@ remove_generic_kernel() {
 	[ ${#generic[@]} -eq 0 ] || pacman -Rdd --noconfirm "${generic[@]}"
 }
 
-build_package() {
-	local name=$1
-	shift
-	local dir=$BUILD/pkgs/$name
-	cp -r "$SRC/arch/pkgs/$name" "$dir"
-	chown -R builder: "$dir"
-	(cd "$dir" && runuser -u builder -- env LISA_BSP="$LISA_BSP" LISA_COMMON="$LISA_COMMON" \
-		LISA_KVER="$LISA_KVER" PKGDEST="$BUILD/repo" makepkg --noconfirm --cleanbuild "$@")
-}
-
 build_native_packages() {
 	local name
 	for name in "${NATIVE_PKGS[@]}"; do
-		log "makepkg $name"
 		build_package "$name"
 		pacman -U --noconfirm --asdeps "$BUILD"/repo/"$name"-[0-9]*.pkg.tar.*
 	done
@@ -84,11 +61,8 @@ build_native_packages() {
 
 build_bsp_packages() {
 	local name
-	# They only repackage the BSP: their runtime dependencies are resolved when
-	# pacman installs them, not while they are packed.
 	for name in "${BSP_PKGS[@]}"; do
-		log "makepkg $name"
-		build_package "$name" --nodeps
+		build_package "$name"
 	done
 }
 
@@ -163,9 +137,7 @@ cleanup() {
 prepare_pacman
 remove_generic_kernel
 pacman -Syu --noconfirm --needed --asdeps "${MAKEDEPENDS[@]}"
-useradd -m builder
-mkdir -p "$BUILD/pkgs" "$BUILD/repo"
-chown builder: "$BUILD/repo"
+ensure_builder_user
 build_native_packages
 build_bsp_packages
 install_packages

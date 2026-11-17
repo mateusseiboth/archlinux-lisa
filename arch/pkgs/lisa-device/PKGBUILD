@@ -4,7 +4,7 @@
 # arch/build.sh exports LISA_BSP and LISA_COMMON (the repository common/ dir).
 pkgname=lisa-device
 pkgver=1
-pkgrel=2
+pkgrel=3
 pkgdesc="Device support for the Xiaomi 11 Lite 5G NE"
 arch=(aarch64)
 url="https://github.com/mateusseiboth/xiaomi-lisa-mainline"
@@ -75,7 +75,9 @@ package() {
 	install -d "$pkgdir/usr/bin"
 	ln -s /usr/lib/lisa/lisa-mkbootimg "$pkgdir/usr/bin/lisa-mkbootimg"
 	cp -a "$LISA_COMMON/rootfs/." "$pkgdir/"
-	cp -a "$LISA_BSP/rootfs/usr/share/alsa" "$pkgdir/usr/share/"
+	# Into an existing directory: cp -a dir dest/ renames dir when dest/ is missing.
+	install -d "$pkgdir/usr/share/alsa"
+	cp -a "$LISA_BSP/rootfs/usr/share/alsa/." "$pkgdir/usr/share/alsa/"
 
 	install -Dm644 initcpio-hook-lisa-panel "$pkgdir/usr/lib/initcpio/hooks/lisa-panel"
 	install -Dm644 initcpio-install-lisa-panel "$pkgdir/usr/lib/initcpio/install/lisa-panel"

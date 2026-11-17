@@ -1,4 +1,5 @@
 bluetooth
+lisa-bootmac
 lisa-resize-rootfs
 lisa-usb-gadget
 ModemManager

@@ -41,7 +41,7 @@ accepts, byte-identical to what pmOS builds.
 | `common/extract-bsp.sh` | Kernel, DTB, modules, firmware and device files out of the pmbootstrap packages, into `out/bsp/` |
 | `common/mkbootimg-lisa.sh` | boot.img + vendor_boot.img for the stock ABL |
 | `common/lisa-mkbootimg` | The same from inside the installed system (pacman hook) |
-| `common/rootfs/` | USB network gadget (172.16.42.1), first-boot growth of the rootfs to the whole userdata, Power key left to the shell |
+| `common/rootfs/` | USB network gadget (172.16.42.1), first-boot growth of the rootfs to the whole userdata, Power key left to the shell, stable Wi-Fi and Bluetooth addresses (`lisa-bootmac`) |
 | `arch/pkgs/` | PKGBUILDs: `linux-lisa`, `lisa-firmware`, `lisa-device`, and the Qualcomm services Arch Linux ARM does not ship (`qrtr`, `rmtfs`, `tqftpserv`, `qbootctl`) |
 | `arch/ui/` | Image components: `base`, `sddm` (display manager on Wayland), `plasma-mobile` (autologin, locked at start), `phosh` |
 | `arch/build.sh` | The image builder (Docker, Arch Linux ARM tarball, qemu-user chroot) |
@@ -56,6 +56,14 @@ Needs Docker and the `qemu-aarch64` binfmt handler with the `F` flag
 bash common/extract-bsp.sh            # from the pmbootstrap packages of xiaomi-lisa
 bash arch/build.sh                    # sddm plasma-mobile phosh
 bash arch/build.sh sddm plasma-mobile # or any set of components
+```
+
+Single packages, without rebuilding the image, in a builder chroot kept
+between runs, then installed on the phone over the USB network:
+
+```sh
+bash arch/build-packages.sh lisa-device hexagonrpcd   # -> out/arch/pkgs/
+bash arch/deploy.sh out/arch/pkgs/lisa-device-*.pkg.tar.*
 ```
 
 Output in `out/arch/`: `rootfs.img`, plus `boot.img`, `vendor_boot.img` and

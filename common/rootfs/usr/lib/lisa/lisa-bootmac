@@ -1,0 +1,28 @@
+#!/bin/sh
+# Stable addresses for the WCN6750: Wi-Fi comes up with the generic
+# 00:03:7F:12:22:22 and Bluetooth with none (hci0 stays unconfigured and BlueZ
+# ignores it). Both are derived from the machine-id, locally administered.
+set -eu
+
+MACHINE_ID_FILE=${LISA_MACHINE_ID_FILE:-/etc/machine-id}
+
+die() {
+	echo "lisa-bootmac: $*" >&2
+	exit 1
+}
+
+# 12 hex digits -> aa:bb:cc:dd:ee:ff with the first byte made locally administered unicast.
+format_mac() {
+	first=$(printf '%02x' $(((0x$(echo "$1" | cut -c1-2) & 0xfc) | 0x02)))
+	echo "$first$(echo "$1" | cut -c3-12)" | sed 's/../&:/g; s/:$//'
+}
+
+[ -s "$MACHINE_ID_FILE" ] || die "machine-id ausente: $MACHINE_ID_FILE"
+hash=$(sha256sum <"$MACHINE_ID_FILE" | cut -c1-24)
+wlan=$(format_mac "$(echo "$hash" | cut -c1-12)")
+bt=$(format_mac "$(echo "$hash" | cut -c13-24)")
+
+ip link set dev wlan0 down
+ip link set dev wlan0 address "$wlan"
+ip link set dev wlan0 up
+btmgmt --index 0 public-addr "$bt"

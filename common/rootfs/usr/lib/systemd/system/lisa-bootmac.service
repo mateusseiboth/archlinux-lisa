@@ -1,0 +1,13 @@
+[Unit]
+Description=Stable Wi-Fi and Bluetooth addresses for lisa
+Wants=sys-subsystem-net-devices-wlan0.device sys-subsystem-bluetooth-devices-hci0.device
+After=sys-subsystem-net-devices-wlan0.device sys-subsystem-bluetooth-devices-hci0.device
+Before=NetworkManager.service bluetooth.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/lisa/lisa-bootmac
+
+[Install]
+WantedBy=multi-user.target
