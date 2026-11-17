@@ -3,8 +3,10 @@
 Arch Linux ARM for the Xiaomi 11 Lite 5G NE / 11 LE (`lisa`, Snapdragon 778G
 SM7325) on the mainline kernel. Plasma Mobile and Phosh are both installed.
 The phone logs straight into Plasma Mobile, which starts on its lock screen
-(numeric keypad); SDDM's own greeter is not usable on a phone. To start Phosh
-instead, set `Session=phosh` in `/etc/sddm.conf.d/20-autologin.conf`.
+(numeric keypad); SDDM's own greeter is not usable on a phone. The app
+launcher has "Mudar para Phosh" / "Mudar para Plasma Mobile": they set the
+autologin session (`lisa-switch-session`, through pkexec with no password for
+the active user) and restart SDDM, which closes the open apps.
 
 The kernel, DTB and firmware are the ones of the postmarketOS port in
 [xiaomi-lisa-mainline](https://github.com/mateusseiboth/xiaomi-lisa-mainline),

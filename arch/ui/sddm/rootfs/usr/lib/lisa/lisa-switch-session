@@ -1,0 +1,26 @@
+#!/bin/sh
+# Sets the session SDDM logs into and restarts SDDM, which closes the current
+# session and opens the new one. Started from the launcher through pkexec
+# (org.lisa.switch-session).
+#
+#   lisa-switch-session plasma-mobile|phosh
+set -eu
+
+CONF=${LISA_AUTOLOGIN_CONF:-/etc/sddm.conf.d/20-autologin.conf}
+SESSIONS_DIR=${LISA_SESSIONS_DIR:-/usr/share/wayland-sessions}
+# --no-block: the caller lives in the session this restart closes.
+RESTART_DM=${LISA_RESTART_DM:-systemctl --no-block restart sddm}
+
+die() {
+	echo "lisa-switch-session: $*" >&2
+	exit 1
+}
+
+session=${1:-}
+case "$session" in
+"" | */* | .*) die "uso: lisa-switch-session <sessão> (sessões em $SESSIONS_DIR)" ;;
+esac
+[ -f "$SESSIONS_DIR/$session.desktop" ] || die "sessão não instalada: $session"
+
+sed -i "s/^Session=.*/Session=$session/" "$CONF"
+$RESTART_DM

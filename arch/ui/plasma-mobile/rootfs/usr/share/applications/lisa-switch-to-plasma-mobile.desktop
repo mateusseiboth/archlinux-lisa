@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Mudar para Plasma Mobile
+Comment=Fecha os aplicativos abertos e abre o Plasma Mobile.
+Exec=pkexec /usr/lib/lisa/lisa-switch-session plasma-mobile
+Icon=system-switch-user
+Categories=System;
+OnlyShowIn=Phosh;GNOME;

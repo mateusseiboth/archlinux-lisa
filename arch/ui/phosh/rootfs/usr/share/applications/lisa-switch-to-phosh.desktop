@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Mudar para Phosh
+Comment=Fecha os aplicativos abertos e abre o Phosh.
+Exec=pkexec /usr/lib/lisa/lisa-switch-session phosh
+Icon=system-switch-user
+Categories=System;
+OnlyShowIn=KDE;

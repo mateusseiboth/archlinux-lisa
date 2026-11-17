@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<!-- The launcher entries switch between Plasma Mobile and Phosh without a password
+     prompt: the user of the active session may run lisa-switch-session as root. -->
+<policyconfig>
+  <action id="org.lisa.switch-session">
+    <description>Switch the phone's interface</description>
+    <message>Trocar a interface do celular</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/lisa/lisa-switch-session</annotate>
+  </action>
+</policyconfig>
