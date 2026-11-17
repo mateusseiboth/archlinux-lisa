@@ -76,5 +76,5 @@ build_package() {
 	esac
 	log "makepkg $name"
 	# shellcheck disable=SC2086 # flags are separate makepkg options
-	(cd "$dir" && as_builder makepkg --noconfirm --cleanbuild $flags)
+	(cd "$dir" && as_builder makepkg --noconfirm --cleanbuild --force $flags)
 }

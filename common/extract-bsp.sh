@@ -17,12 +17,14 @@ PMB_WORK=${PMB_WORK:-$HOME/.local/var/pmbootstrap}
 packages="$PMB_WORK/packages/edge/aarch64"
 apk_cache="$PMB_WORK/cache_apk_aarch64"
 out="$REPO_ROOT/out/bsp"
+# A kernel built by tools/build-kernel.sh, laid out like the kernel package.
+kernel_root=""
 
 MARKER=".lisa-bsp"
 
 # source  package                          strategy[:argument]
 PACKAGE_TABLE="
-packages linux-postmarketos-qcom-sc7280    kernel
+kernel   linux-postmarketos-qcom-sc7280    kernel
 packages device-xiaomi-lisa                device
 packages firmware-xiaomi-lisa-adsp         firmware
 packages firmware-xiaomi-lisa-cdsp         firmware
@@ -49,6 +51,7 @@ parse_args() {
 		--packages) packages=$2 ;;
 		--apk-cache) apk_cache=$2 ;;
 		--out) out=$2 ;;
+		--kernel-root) kernel_root=$2 ;;
 		*) die "opção desconhecida: $1" ;;
 		esac
 		shift 2
@@ -116,21 +119,28 @@ install_firmware() {
 
 source_dir() {
 	case "$1" in
-	packages) echo "$packages" ;;
+	packages | kernel) echo "$packages" ;;
 	cache) echo "$apk_cache" ;;
 	*) die "origem desconhecida: $1" ;;
 	esac
 }
 
-extract_package() {
-	local source=$1 name=$2 strategy=$3
-	local apk staging
+# The directory holding the package's files: --kernel-root for the kernel when
+# given, else the newest apk unpacked into a staging directory.
+package_root() {
+	local source=$1 name=$2 apk staging
+	[ "$source" = kernel ] && [ -n "$kernel_root" ] && { echo "$kernel_root"; return; }
 	apk=$(find_newest_apk "$(source_dir "$source")" "$name")
 	staging=$(mktemp -d "$out/.unpack.XXXXXX")
 	unpack_apk "$apk" "$staging"
-	"install_${strategy%%:*}" "$staging" "$(echo "$strategy" | cut -s -d: -f2)"
-	rm -rf "$staging"
-	basename "$apk"
+	echo "$staging"
+}
+
+extract_package() {
+	local source=$1 name=$2 strategy=$3 root
+	root=$(package_root "$source" "$name")
+	"install_${strategy%%:*}" "$root" "$(echo "$strategy" | cut -s -d: -f2)"
+	echo "$name"
 }
 
 parse_args "$@"
@@ -139,4 +149,5 @@ echo "$PACKAGE_TABLE" | while read -r source name strategy; do
 	[ -n "$source" ] || continue
 	extract_package "$source" "$name" "$strategy"
 done
+rm -rf "$out"/.unpack.*
 echo "BSP em $out"

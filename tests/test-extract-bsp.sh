@@ -100,6 +100,22 @@ assert_eq "fsa4480
 panel-csot-vtdr6130" "$(cat "$out/initramfs/modules")" "initramfs module list"
 assert_eq panel-hook "$(cat "$out/initramfs/panel-cycle.sh")" "panel power-cycle hook"
 
+# A kernel built locally (tools/build-kernel.sh) replaces the kernel package:
+# same layout as the package root, no apk needed.
+kroot="$work/kernel-root"
+put "$kroot" boot/vmlinuz local-kernel
+put "$kroot" boot/dtbs/qcom/sm7325-xiaomi-lisa.dtb local-dtb
+put "$kroot" usr/share/kernel/postmarketos-qcom-sc7280/kernel.release 7.2.10
+put "$kroot" usr/lib/modules/7.2.10/modules.dep local-deps
+rm "$pkgs"/linux-postmarketos-qcom-sc7280-*.apk
+bash "$SCRIPT" --packages "$pkgs" --apk-cache "$cache" --kernel-root "$kroot" --out "$work/bsp-local" >/dev/null
+assert_eq 0 $? "extracts with a local kernel and no kernel package"
+lmods="$work/bsp-local/rootfs/usr/lib/modules/7.2.10"
+assert_eq local-kernel "$(cat "$lmods/vmlinuz")" "kernel from --kernel-root"
+assert_eq local-dtb "$(cat "$lmods/dtbs/qcom/sm7325-xiaomi-lisa.dtb")" "DTB from --kernel-root"
+assert_eq 7.2.10 "$(cat "$work/bsp-local/kernel/kernel.release")" "release from --kernel-root"
+assert_eq new-dtbo "$(cat "$work/bsp-local/kernel/dtbo.img")" "device package still from the packages"
+
 rm "$pkgs"/device-xiaomi-lisa-*.apk
 assert_fails "fails when a required package is missing" \
 	bash "$SCRIPT" --packages "$pkgs" --apk-cache "$cache" --out "$work/bsp2"
