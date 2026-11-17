@@ -65,11 +65,12 @@ remove_generic_kernel() {
 
 build_package() {
 	local name=$1
+	shift
 	local dir=$BUILD/pkgs/$name
 	cp -r "$SRC/arch/pkgs/$name" "$dir"
 	chown -R builder: "$dir"
 	(cd "$dir" && runuser -u builder -- env LISA_BSP="$LISA_BSP" LISA_COMMON="$LISA_COMMON" \
-		LISA_KVER="$LISA_KVER" PKGDEST="$BUILD/repo" makepkg --noconfirm --cleanbuild)
+		LISA_KVER="$LISA_KVER" PKGDEST="$BUILD/repo" makepkg --noconfirm --cleanbuild "$@")
 }
 
 build_native_packages() {
@@ -83,9 +84,11 @@ build_native_packages() {
 
 build_bsp_packages() {
 	local name
+	# They only repackage the BSP: their runtime dependencies are resolved when
+	# pacman installs them, not while they are packed.
 	for name in "${BSP_PKGS[@]}"; do
 		log "makepkg $name"
-		build_package "$name"
+		build_package "$name" --nodeps
 	done
 }
 

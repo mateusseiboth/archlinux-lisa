@@ -36,9 +36,9 @@ check_host() {
 
 check_host
 mkdir -p "$OUT"
-# Half the cores by default, so the desktop stays usable during the build.
-nice -n 10 docker run --rm --privileged \
-	--cpus "${LISA_BUILD_CPUS:-$(($(nproc) / 2))}" \
+# All cores by default; LISA_BUILD_CPUS lowers it to keep the desktop responsive.
+docker run --rm --privileged \
+	--cpus "${LISA_BUILD_CPUS:-$(nproc)}" \
 	-v lisa-arch-cache:/cache \
 	-v lisa-arch-work:/work \
 	-v "$REPO_ROOT:/src:ro" \

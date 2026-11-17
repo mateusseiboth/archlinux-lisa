@@ -55,8 +55,8 @@ bash arch/build.sh sddm plasma-mobile # or any set of components
 ```
 
 Output in `out/arch/`: `rootfs.img`, plus `boot.img`, `vendor_boot.img` and
-`dtbo.img` for booting without U-Boot. The build uses half of the CPU cores by
-default (`LISA_BUILD_CPUS` changes it).
+`dtbo.img` for booting without U-Boot. The build uses every CPU core
+(`LISA_BUILD_CPUS` limits it).
 
 The phone user is named after the user running the build (`LISA_USER` changes
 it), password `147147` (`LISA_PASSWORD`).
