@@ -1,0 +1,5 @@
+# The accelerometer sits behind the ADSP's sensor core (libssc), which the
+# stock iio-sensor-proxy rule leaves out: it reports Android axes, so every axis
+# is flipped for Linux (same as other SSC phones). Proximity is a virtual
+# ultrasound sensor on lisa and does not exist outside Android.
+SUBSYSTEM=="misc", KERNEL=="fastrpc-adsp", ENV{IIO_SENSOR_PROXY_TYPE}+="ssc-accel", ENV{ACCEL_MOUNT_MATRIX}="-1, 0, 0; 0, -1, 0; 0, 0, -1"

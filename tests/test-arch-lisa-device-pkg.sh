@@ -41,5 +41,7 @@ assert_eq /usr/lib/lisa/lisa-mkbootimg "$(readlink "$pkgdir/usr/bin/lisa-mkbooti
 assert_eq panel-hook "$(cat "$pkgdir/usr/lib/lisa/panel-cycle.sh")" "panel power-cycle script"
 assert_file "$pkgdir/usr/lib/initcpio/hooks/lisa-panel" "initcpio hook"
 assert_file "$pkgdir/usr/lib/systemd/logind.conf.d/50-lisa-powerkey.conf" "common rootfs overlay"
+assert_file "$pkgdir/usr/lib/udev/rules.d/81-lisa-sensors.rules" "accelerometer udev rule"
+assert_contains "$(cat "$PKG_DIR/PKGBUILD")" "hexagonrpcd" "depends on hexagonrpcd"
 
 finish

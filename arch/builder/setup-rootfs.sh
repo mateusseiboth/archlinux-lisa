@@ -17,7 +17,7 @@ LISA_USER=${LISA_USER:?LISA_USER não definido}
 . "$SRC/arch/builder/makepkg-lib.sh"
 
 # Built in this order: rmtfs and tqftpserv link against qrtr.
-NATIVE_PKGS=(qrtr rmtfs tqftpserv qbootctl)
+NATIVE_PKGS=(qrtr rmtfs tqftpserv qbootctl hexagonrpcd)
 BSP_PKGS=(lisa-firmware lisa-device linux-lisa)
 # The PKGBUILDs' own makedepends come through install_build_deps.
 MAKEDEPENDS=(base-devel)
@@ -119,6 +119,9 @@ configure_system() {
 	rename_default_user
 	echo "$LISA_USER:$LISA_PASSWORD" | chpasswd
 	usermod -aG wheel,video,audio,input,network "$LISA_USER"
+	# A PIN typed on a phone keypad goes wrong easily: 3 misses and a 10 minute
+	# lock-out (the Arch defaults) left the phone unusable.
+	sed -i 's/^#\? *deny *=.*/deny = 10/; s/^#\? *unlock_time *=.*/unlock_time = 60/' /etc/security/faillock.conf
 	echo '%wheel ALL=(ALL:ALL) ALL' >/etc/sudoers.d/10-wheel
 	chmod 440 /etc/sudoers.d/10-wheel
 	printf 'PARTLABEL=%s / ext4 rw,relatime 0 1\n' userdata >/etc/fstab

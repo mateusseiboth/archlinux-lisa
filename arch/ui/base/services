@@ -1,4 +1,6 @@
 bluetooth
+hexagonrpcd-adsp-rootpd
+hexagonrpcd-adsp-sensorspd
 lisa-bootmac
 lisa-resize-rootfs
 lisa-usb-gadget

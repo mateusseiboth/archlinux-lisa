@@ -4,7 +4,7 @@
 # arch/build.sh exports LISA_BSP and LISA_COMMON (the repository common/ dir).
 pkgname=lisa-device
 pkgver=1
-pkgrel=3
+pkgrel=4
 pkgdesc="Device support for the Xiaomi 11 Lite 5G NE"
 arch=(aarch64)
 url="https://github.com/mateusseiboth/xiaomi-lisa-mainline"
@@ -12,6 +12,7 @@ license=(MIT)
 depends=(
 	alsa-ucm-conf
 	android-tools
+	hexagonrpcd
 	linux-firmware-atheros
 	linux-firmware-qcom
 	lisa-firmware
