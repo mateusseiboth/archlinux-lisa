@@ -31,10 +31,10 @@ wlan_a=$(sed -n 's/^ip link set dev wlan0 address \(.*\)$/\1/p' "$work/calls")
 bt_a=$(sed -n 's/^btmgmt --index 0 public-addr \(.*\)$/\1/p' "$work/calls")
 
 mac_re='^[0-9a-f]{2}(:[0-9a-f]{2}){5}$'
-[[ $wlan_a =~ $mac_re ]] && pass "Wi-Fi address well formed" || fail "Wi-Fi address [$wlan_a]"
-[[ $bt_a =~ $mac_re ]] && pass "Bluetooth address well formed" || fail "Bluetooth address [$bt_a]"
+assert_matches "$wlan_a" "$mac_re" "Wi-Fi address well formed"
+assert_matches "$bt_a" "$mac_re" "Bluetooth address well formed"
 assert_eq 2 $((0x${wlan_a%%:*} & 3)) "Wi-Fi address is locally administered unicast"
-[ "$wlan_a" != "$bt_a" ] && pass "Wi-Fi and Bluetooth differ" || fail "same address for both"
+assert_ne "$wlan_a" "$bt_a" "Wi-Fi and Bluetooth differ"
 assert_contains "$calls_a" "ip link set dev wlan0 down" "takes wlan0 down before the change"
 assert_contains "$calls_a" "ip link set dev wlan0 up" "brings wlan0 back up"
 
@@ -42,8 +42,8 @@ run_bootmac "$work/id-a"
 assert_eq "$calls_a" "$(cat "$work/calls")" "same machine-id, same addresses"
 
 run_bootmac "$work/id-b"
-[ "$wlan_a" != "$(sed -n 's/^ip link set dev wlan0 address \(.*\)$/\1/p' "$work/calls")" ] &&
-	pass "another machine-id, another address" || fail "address does not depend on the machine-id"
+assert_ne "$wlan_a" "$(sed -n 's/^ip link set dev wlan0 address \(.*\)$/\1/p' "$work/calls")" \
+	"another machine-id, another address"
 
 assert_fails "fails without a machine-id" run_bootmac "$work/missing"
 

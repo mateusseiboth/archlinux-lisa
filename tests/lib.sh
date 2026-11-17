@@ -21,6 +21,18 @@ assert_eq() {
 	pass "$label"
 }
 
+assert_ne() {
+	local unexpected=$1 actual=$2 label=$3
+	[ "$unexpected" != "$actual" ] || { fail "$label: got [$actual]"; return; }
+	pass "$label"
+}
+
+assert_matches() {
+	local value=$1 regex=$2 label=$3
+	[[ $value =~ $regex ]] || { fail "$label: [$value] does not match $regex"; return; }
+	pass "$label"
+}
+
 assert_contains() {
 	local haystack=$1 needle=$2 label=$3
 	case "$haystack" in
