@@ -14,9 +14,10 @@ Measured on the phone (kernel 7.2.9 from the pmOS port, U-Boot `linux-only`).
 | Accelerometer | works | no | ADSP sensor core through `hexagonrpcd` + libssc, udev rule for iio-sensor-proxy |
 | Ambient light, compass | works | no | same path |
 | Proximity | not possible | no | a virtual ultrasound sensor (Elliptic Labs), Android only |
-| Cameras (4) | detected | works | libcamera finds all four; libcamera 0.8.0 with the pmOS quad-Bayer patches is being packaged |
+| Cameras (4) | stream, image dark | works | all four stream with libcamera 0.7.2 and 0.8.0 (packaged with the pmOS patches, `arch/pkgs/libcamera`; installing it needs pipewire-libcamera and plasma-camera rebuilt against it); frames still come out dark, under investigation |
 | Flash LED | present | ? | `white:flash` |
-| Modem data | in progress | no | IPA fixed in the device tree (`rmnet_ipa0` comes up); SIM selection through `msm-modem` |
+| Kernel features | Landlock on | | own kernel build (`tools/build-kernel.sh`, Alpine clang like pmOS); pacman's download sandbox works again |
+| Modem data | in progress | no | IPA fixed in the device tree (`rmnet_ipa0` comes up), ModemManager creates the modem, `msm-modem` selects the SIM; both slots report no card (no-atr-received) |
 | Calls, SMS | not yet | no | after modem data; voice audio needs q6voiced and UCM work |
 | Vibration (Awinic AW8624) | in progress | no | no mainline driver; the stock DT puts it on SE4 with GPIO 20/21, which the mainline pinctrl does not offer for SE4 |
 | Microphones, headset | not yet | no | WCD9370 codec (mainline driver wcd937x) on SoundWire with the LPASS TX/RX macros: device tree work, no new driver |

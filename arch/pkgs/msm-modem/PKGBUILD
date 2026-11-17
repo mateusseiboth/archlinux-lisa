@@ -1,0 +1,24 @@
+# Selects the SIM application on Qualcomm modems before ModemManager starts.
+# Without it ModemManager fails on lisa with "GW primary session index unknown".
+# From postmarketOS (same version as the pmOS install on lisa); not packaged by
+# Arch Linux ARM.
+pkgname=msm-modem
+pkgver=13
+pkgrel=1
+pkgdesc="Qualcomm modem helpers: UIM slot selection for ModemManager"
+arch=(aarch64)
+url="https://gitlab.nura.eco/nura/msm-modem"
+license=(GPL-3.0-or-later)
+depends=(libqmi rmtfs sh)
+makedepends=(meson)
+source=("$pkgname-$pkgver.tar.gz::$url/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('1718fb1d9888e99f8e3ddff5a549076b3f74d9efbb47d7700b6afa4238c77f7f')
+
+build() {
+	arch-meson "$pkgname-$pkgver" build -Dopenrc=false -Dsystemd=true -Duim-selection=true
+	meson compile -C build
+}
+
+package() {
+	meson install -C build --destdir "$pkgdir"
+}

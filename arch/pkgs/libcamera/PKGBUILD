@@ -1,0 +1,138 @@
+# libcamera 0.8.0 with the two patches postmarketOS carries (pmaports
+# temp/libcamera), which the lisa cameras need: quad-Bayer CFA layouts (the
+# 64 MP S5KGW3 main sensor) and output size limits in the software ISP.
+# Based on Arch's libcamera PKGBUILD, without docs, Python bindings and tests
+# (under qemu-user, sphinx/texlive and the test suite would take hours), and
+# only the pipelines a phone uses: simple (software ISP, the lisa cameras) and
+# uvcvideo (USB webcams). The Raspberry Pi IPA would also need tensorflow-lite.
+# werror is off: GCC 16 warns in the bound-method code ("at offset 16 into
+# object of size 32") and libcamera builds with warnings as errors.
+pkgbase=libcamera
+pkgname=(
+	libcamera
+	libcamera-ipa
+	libcamera-tools
+	gst-plugin-libcamera
+)
+pkgver=0.8.0
+pkgrel=1
+pkgdesc="A complex camera support library for Linux, Android, and ChromeOS"
+arch=(aarch64)
+url="https://libcamera.org/"
+makedepends=(
+	glib2
+	gst-plugins-base
+	gtest
+	libdrm
+	libevent
+	libjpeg-turbo
+	libtiff
+	libunwind
+	libyaml
+	libyuv
+	meson
+	openssl
+	python-jinja
+	python-ply
+	python-pyyaml
+	qt6-base
+	sdl2
+	systemd
+)
+source=(
+	"$pkgbase-$pkgver.tar.gz::https://gitlab.freedesktop.org/camera/libcamera/-/archive/v$pkgver/libcamera-v$pkgver.tar.gz"
+	0001-libcamera-software_isp-Allow-limiting-output-sizes.patch
+	0002-libcamera-Add-quad-Bayer-CFA-layout-support.patch
+)
+sha256sums=('400d3ca7e3acc3ecd5227fb24e6b64395a0979c7107eed41f15fc804ba03494c'
+	'3707fc27d4679a05d38265032fb31a9052ca0c6e29bff292465c1ade8c059c46'
+	'6adad57ac6578b632d948eba0242d08e0d3363f4f3cc22ec6938971d340a9dfd')
+
+_src=$pkgbase-v$pkgver
+
+_pick() {
+	local p="$1" f d
+	shift
+	for f; do
+		d="$srcdir/$p/${f#"$pkgdir"/}"
+		mkdir -p "$(dirname "$d")"
+		mv "$f" "$d"
+		rmdir -p --ignore-fail-on-non-empty "$(dirname "$f")"
+	done
+}
+
+prepare() {
+	cd "$_src"
+	local patch
+	for patch in ../0*.patch; do
+		patch -Np1 <"$patch"
+	done
+	# utils/gen-version.sh reads it when there is no git checkout
+	printf "%s\n" "$pkgver" >.tarball-version
+}
+
+build() {
+	arch-meson "$_src" build \
+		-D v4l2=enabled \
+		-D tracing=disabled \
+		-D test=false \
+		-D documentation=disabled \
+		-D pycamera=disabled \
+		-D pipelines=simple,uvcvideo \
+		-D ipas=softisp \
+		-D werror=false
+	meson compile -C build
+}
+
+package_libcamera() {
+	license=(Apache-2.0 CC0-1.0 GPL-2.0-or-later LGPL-2.1-or-later)
+	depends=(glibc gnutls libcamera-ipa libelf libgcc libglvnd libstdc++ libunwind libyaml libyuv sh systemd-libs)
+	optdepends=(
+		'gst-plugin-libcamera: GStreamer plugin'
+		'libcamera-tools: for applications'
+	)
+	provides=(libcamera.so libcamera-base.so)
+
+	meson install -C build --destdir "$pkgdir"
+	install -vDm644 "$_src"/LICENSES/{BSD-3-Clause,Linux-syscall-note,MIT}.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+
+	(
+		cd "$pkgdir"
+		_pick $pkgbase-ipa usr/lib/libcamera/
+		_pick $pkgbase-tools usr/bin/{cam,libcamera-bug-report,lc-compliance,qcam}
+		_pick gst-plugin-$pkgbase usr/lib/gstreamer-*
+	)
+}
+
+package_libcamera-ipa() {
+	pkgdesc+=" - signed IPA"
+	license=(BSD-2-Clause CC-BY-SA-4.0 CC0-1.0 GPL-2.0-or-later LGPL-2.1-or-later)
+	depends=(glibc libcamera libgcc libstdc++)
+	# stripping requires re-signing of IPA libs, so it is done here
+	options=(!strip)
+
+	strip $pkgname/usr/lib/libcamera/*{.so,proxy}
+	local lib
+	for lib in $pkgname/usr/lib/libcamera/*.so; do
+		"$_src"/src/ipa/ipa-sign.sh "$(find build -type f -iname "*ipa-priv-key.pem")" "$lib" "$lib.sign"
+	done
+	mv -v $pkgname/* "$pkgdir"
+	install -vDm644 "$_src"/LICENSES/BSD-2-Clause.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+}
+
+package_libcamera-tools() {
+	pkgdesc+=" - tools"
+	license=(BSD-2-Clause CC0-1.0 GPL-2.0-or-later LGPL-2.1-or-later)
+	depends=(glibc gtest libcamera libdrm libevent libgcc libjpeg-turbo libstdc++ libtiff libyaml qt6-base sdl2)
+
+	mv -v $pkgname/* "$pkgdir"
+	install -vDm644 "$_src"/LICENSES/BSD-2-Clause.txt -t "$pkgdir/usr/share/licenses/$pkgname/"
+}
+
+package_gst-plugin-libcamera() {
+	pkgdesc="Multimedia graph framework - libcamera plugin"
+	license=(CC0-1.0 LGPL-2.1-or-later)
+	depends=(glib2 glibc gst-plugins-base-libs gstreamer libcamera libgcc libstdc++)
+
+	mv -v $pkgname/* "$pkgdir"
+}

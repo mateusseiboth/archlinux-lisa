@@ -5,6 +5,7 @@ lisa-bootmac
 lisa-resize-rootfs
 lisa-usb-gadget
 ModemManager
+msm-modem-uim-selection
 NetworkManager
 qbootctl
 rmtfs

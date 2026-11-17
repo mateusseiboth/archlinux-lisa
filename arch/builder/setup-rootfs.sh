@@ -17,7 +17,7 @@ LISA_USER=${LISA_USER:?LISA_USER não definido}
 . "$SRC/arch/builder/makepkg-lib.sh"
 
 # Built in this order: rmtfs and tqftpserv link against qrtr.
-NATIVE_PKGS=(qrtr rmtfs tqftpserv qbootctl hexagonrpcd)
+NATIVE_PKGS=(qrtr rmtfs tqftpserv qbootctl hexagonrpcd msm-modem)
 BSP_PKGS=(lisa-firmware lisa-device linux-lisa)
 # The PKGBUILDs' own makedepends come through install_build_deps.
 MAKEDEPENDS=(base-devel)

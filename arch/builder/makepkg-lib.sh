@@ -11,17 +11,17 @@ log() {
 }
 
 prepare_pacman() {
-	# The build volume confuses the space check. DisableSandbox stays in the
-	# image: neither qemu-user nor the lisa kernel has Landlock yet.
+	# The build volume confuses the space check, and qemu-user has no Landlock
+	# for pacman's download sandbox. Both come back in restore_pacman.
 	sed -i 's/^CheckSpace/#CheckSpace/' /etc/pacman.conf
-	grep -q '^DisableSandbox' /etc/pacman.conf ||
-		sed -i '/^\[options\]/a # No Landlock in the kernel yet (pacman download sandbox).\nDisableSandbox' /etc/pacman.conf
+	grep -q '^DisableSandbox' /etc/pacman.conf || sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf
 	pacman-key --init
 	pacman-key --populate archlinuxarm
 }
 
+# The lisa kernel has Landlock, so the image keeps pacman's sandbox.
 restore_pacman() {
-	sed -i 's/^#CheckSpace/CheckSpace/' /etc/pacman.conf
+	sed -i 's/^#CheckSpace/CheckSpace/; /^DisableSandbox$/d' /etc/pacman.conf
 }
 
 ensure_builder_user() {
