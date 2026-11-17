@@ -1,0 +1,17 @@
+# Signed lisa firmware (remoteprocs, GPU zap, Wi-Fi/BT) and sensor calibration,
+# installed under /usr/lib/firmware/updates so it never clashes with linux-firmware.
+# arch/build.sh exports LISA_BSP.
+pkgname=lisa-firmware
+pkgver=1
+pkgrel=1
+pkgdesc="Firmware for the Xiaomi 11 Lite 5G NE"
+arch=(aarch64)
+url="https://github.com/mateusseiboth/xiaomi-lisa-mainline"
+license=(LicenseRef-proprietary)
+options=(!strip !debug)
+
+package() {
+	install -d "$pkgdir/usr/lib/firmware" "$pkgdir/usr/share"
+	cp -a "$LISA_BSP/rootfs/usr/lib/firmware/updates" "$pkgdir/usr/lib/firmware/"
+	cp -a "$LISA_BSP/rootfs/usr/share/qcom" "$pkgdir/usr/share/"
+}

@@ -1,0 +1,13 @@
+[Unit]
+Description=USB network gadget for lisa (172.16.42.1)
+After=sys-kernel-config.mount
+Requires=sys-kernel-config.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/sbin/modprobe -a libcomposite usb_f_ncm
+ExecStart=/usr/lib/lisa/lisa-usb-gadget
+
+[Install]
+WantedBy=multi-user.target

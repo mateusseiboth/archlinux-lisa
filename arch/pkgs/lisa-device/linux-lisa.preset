@@ -1,0 +1,5 @@
+# mkinitcpio preset for linux-lisa. lisa-mkbootimg packs the result into
+# /boot/vendor_boot.img (pacman hook 95-lisa-mkbootimg).
+ALL_kver="/boot/vmlinuz-linux-lisa"
+PRESETS=('default')
+default_image="/boot/initramfs-linux-lisa.img"

@@ -1,0 +1,20 @@
+# Installed on every image, whatever the UI.
+alsa-utils
+bluez
+bluez-utils
+e2fsprogs
+iw
+less
+mesa
+modemmanager
+networkmanager
+openssh
+pipewire
+pipewire-alsa
+pipewire-pulse
+sudo
+usbutils
+vim
+vulkan-freedreno
+wireless-regdb
+wireplumber

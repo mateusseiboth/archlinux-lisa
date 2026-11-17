@@ -1,0 +1,6 @@
+#!/usr/bin/ash
+# The first DSI bring-up after the ABL hand-off leaves the panel dark until the
+# link is power-cycled once; see /usr/lib/lisa/panel-cycle.sh.
+run_hook() {
+	sh /usr/lib/lisa/panel-cycle.sh
+}

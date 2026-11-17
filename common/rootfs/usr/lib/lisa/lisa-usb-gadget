@@ -1,0 +1,41 @@
+#!/bin/sh
+# Exposes an NCM network function on the USB port with the pmOS ids, so the
+# phone answers at 172.16.42.1 (see 50-lisa-usb0.network) while it is brought up.
+set -eu
+
+CONFIGFS=${LISA_CONFIGFS:-/sys/kernel/config}
+UDC_DIR=${LISA_UDC_DIR:-/sys/class/udc}
+MACHINE_ID_FILE=${LISA_MACHINE_ID_FILE:-/etc/machine-id}
+
+gadget="$CONFIGFS/usb_gadget/lisa"
+
+die() {
+	echo "lisa-usb-gadget: $*" >&2
+	exit 1
+}
+
+find_udc() {
+	udc=$(find "$UDC_DIR" -mindepth 1 -maxdepth 1 -printf '%f\n' 2>/dev/null | head -n 1)
+	[ -n "$udc" ] || die "nenhum controlador USB em $UDC_DIR"
+	echo "$udc"
+}
+
+read_serial() {
+	cut -c1-16 "$MACHINE_ID_FILE" 2>/dev/null || echo lisa
+}
+
+create_gadget() {
+	mkdir -p "$gadget/strings/0x409" "$gadget/functions/ncm.usb0" "$gadget/configs/c.1/strings/0x409"
+	echo 0x18d1 >"$gadget/idVendor"
+	echo 0xd001 >"$gadget/idProduct"
+	echo Xiaomi >"$gadget/strings/0x409/manufacturer"
+	echo "Xiaomi 11 Lite 5G NE" >"$gadget/strings/0x409/product"
+	read_serial >"$gadget/strings/0x409/serialnumber"
+	echo NCM >"$gadget/configs/c.1/strings/0x409/configuration"
+	ln -s "$gadget/functions/ncm.usb0" "$gadget/configs/c.1/ncm.usb0"
+}
+
+[ -d "$gadget" ] && exit 0
+udc=$(find_udc)
+create_gadget
+echo "$udc" >"$gadget/UDC"

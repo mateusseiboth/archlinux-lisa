@@ -1,0 +1,73 @@
+# archlinux-lisa
+
+Arch Linux ARM for the Xiaomi 11 Lite 5G NE / 11 LE (`lisa`, Snapdragon 778G
+SM7325) on the mainline kernel. Plasma Mobile and Phosh are both installed and
+picked on the login screen.
+
+The kernel, DTB and firmware are the ones of the postmarketOS port in
+[xiaomi-lisa-mainline](https://github.com/mateusseiboth/xiaomi-lisa-mainline),
+so the hardware support is the same: display, GPU, touch, Wi-Fi, Bluetooth,
+battery, speakers and cameras work; microphones, fingerprint and calls do not.
+
+## How it boots
+
+```
+ABL (stock Xiaomi) -> boot_a: U-Boot (u-boot-lisa, branch linux-only)
+                   -> vendor_boot_a: the DTB only
+U-Boot menu        -> "Arch Linux": sysboot on userdata, /boot/extlinux/extlinux.conf
+                   -> /boot/vmlinuz-linux-lisa + /boot/initramfs-linux-lisa.img
+```
+
+The rootfs is a plain ext4 written to `userdata` (no partition table inside).
+A kernel update is a normal `pacman -Syu`: mkinitcpio rebuilds the initramfs
+and U-Boot reads the new files on the next boot. Nothing has to be flashed.
+
+The U-Boot menu (hold Volume Down while powering on) also has fastboot, the UFS
+as a USB disk for the PC (UMS), a serial console over USB and a shell.
+
+Booting straight from the ABL without U-Boot also works: `lisa-mkbootimg`
+writes `/boot/boot.img` and `/boot/vendor_boot.img` in the layout the ABL
+accepts, byte-identical to what pmOS builds.
+
+## Layout
+
+| Path | Content |
+| --- | --- |
+| `common/lisa.conf` | Boot facts (load offsets, cmdline, root partition) |
+| `common/extract-bsp.sh` | Kernel, DTB, modules, firmware and device files out of the pmbootstrap packages, into `out/bsp/` |
+| `common/mkbootimg-lisa.sh` | boot.img + vendor_boot.img for the stock ABL |
+| `common/lisa-mkbootimg` | The same from inside the installed system (pacman hook) |
+| `common/rootfs/` | USB network gadget (172.16.42.1) and first-boot growth of the rootfs to the whole userdata |
+| `arch/pkgs/` | PKGBUILDs: `linux-lisa`, `lisa-firmware`, `lisa-device`, and the Qualcomm services Arch Linux ARM does not ship (`qrtr`, `rmtfs`, `tqftpserv`, `qbootctl`) |
+| `arch/ui/` | Image components: `base`, `sddm` (Wayland login with on-screen keyboard and session picker), `plasma-mobile`, `phosh` |
+| `arch/build.sh` | The image builder (Docker, Arch Linux ARM tarball, qemu-user chroot) |
+| `tests/` | `bash tests/run.sh` |
+
+## Build
+
+Needs Docker and the `qemu-aarch64` binfmt handler with the `F` flag
+(`qemu-user-static` on Fedora). No root on the host.
+
+```sh
+bash common/extract-bsp.sh            # from the pmbootstrap packages of xiaomi-lisa
+bash arch/build.sh                    # sddm plasma-mobile phosh
+bash arch/build.sh sddm plasma-mobile # or any set of components
+```
+
+Output in `out/arch/`: `rootfs.img`, plus `boot.img`, `vendor_boot.img` and
+`dtbo.img` for booting without U-Boot. The build uses half of the CPU cores by
+default (`LISA_BUILD_CPUS` changes it).
+
+User `alarm`, password `147147` (`LISA_PASSWORD` at build time changes it).
+
+## Install
+
+1. ABL fastboot (Power + Volume Down): flash `boot_a` with U-Boot from
+   [u-boot-lisa](https://github.com/mateusseiboth/u-boot-lisa) (branch
+   `linux-only`) and `vendor_boot_a` with a vendor_boot v3 holding the DTB.
+2. U-Boot menu, "USB disk for the PC": the phone's UFS LUN 0 shows up on the
+   PC. Write the rootfs to the `userdata` partition:
+   `dd if=out/arch/rootfs.img of=/dev/sdX33 bs=4M oflag=direct status=progress`.
+3. Eject the disk on the PC: the phone restarts into Arch Linux.
+
+Over USB, the phone answers at `ssh alarm@172.16.42.1`.

@@ -1,0 +1,19 @@
+# Mainline kernel for the Xiaomi 11 Lite 5G NE (lisa), repackaged from the
+# pmbootstrap build of linux-postmarketos-qcom-sc7280 (see common/extract-bsp.sh).
+# arch/build.sh exports LISA_BSP (the extracted BSP) and LISA_KVER.
+pkgname=linux-lisa
+pkgver=${LISA_KVER:?LISA_KVER não definido}
+pkgrel=1
+pkgdesc="Mainline Linux kernel and modules for the Xiaomi 11 Lite 5G NE"
+arch=(aarch64)
+url="https://github.com/mateusseiboth/xiaomi-lisa-mainline"
+license=(GPL-2.0-only)
+depends=(coreutils kmod mkinitcpio lisa-device)
+options=(!strip !debug)
+
+package() {
+	install -d "$pkgdir/usr/lib/modules"
+	cp -a "$LISA_BSP/rootfs/usr/lib/modules/$pkgver" "$pkgdir/usr/lib/modules/"
+	# Read by the mkinitcpio pacman hook to name /boot/vmlinuz-linux-lisa and the preset.
+	echo "$pkgname" >"$pkgdir/usr/lib/modules/$pkgver/pkgbase"
+}

@@ -1,0 +1,11 @@
+bluetooth
+lisa-resize-rootfs
+lisa-usb-gadget
+ModemManager
+NetworkManager
+qbootctl
+rmtfs
+sshd
+systemd-networkd
+systemd-timesyncd
+tqftpserv

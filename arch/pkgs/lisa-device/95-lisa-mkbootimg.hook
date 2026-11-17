@@ -1,0 +1,16 @@
+# Runs after 90-mkinitcpio-install: packs the new kernel and initramfs into
+# /boot/boot.img and /boot/vendor_boot.img for the stock ABL.
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Target = usr/lib/modules/*/vmlinuz
+Target = usr/lib/initcpio/*
+Target = usr/lib/lisa/*
+Target = etc/mkinitcpio.conf.d/lisa.conf
+
+[Action]
+Description = Building lisa boot images...
+When = PostTransaction
+Exec = /usr/bin/lisa-mkbootimg
+Depends = android-tools

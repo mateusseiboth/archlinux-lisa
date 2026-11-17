@@ -1,0 +1,12 @@
+[Unit]
+Description=Grow the root filesystem to the whole userdata partition
+ConditionPathExists=!/var/lib/lisa/rootfs-resized
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/resize2fs /dev/disk/by-partlabel/userdata
+ExecStartPost=/usr/bin/mkdir -p /var/lib/lisa
+ExecStartPost=/usr/bin/touch /var/lib/lisa/rootfs-resized
+
+[Install]
+WantedBy=multi-user.target

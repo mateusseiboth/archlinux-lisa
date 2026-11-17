@@ -1,0 +1,84 @@
+# Device support for the Xiaomi 11 Lite 5G NE (lisa): extlinux.conf for the
+# U-Boot menu, boot images for booting straight from the stock ABL, initramfs
+# setup, Qualcomm services, audio UCM and USB networking.
+# arch/build.sh exports LISA_BSP and LISA_COMMON (the repository common/ dir).
+pkgname=lisa-device
+pkgver=1
+pkgrel=1
+pkgdesc="Device support for the Xiaomi 11 Lite 5G NE"
+arch=(aarch64)
+url="https://github.com/mateusseiboth/xiaomi-lisa-mainline"
+license=(MIT)
+depends=(
+	alsa-ucm-conf
+	android-tools
+	linux-firmware-atheros
+	linux-firmware-qcom
+	lisa-firmware
+	mkinitcpio
+	qbootctl
+	qrtr
+	rmtfs
+	tqftpserv
+)
+backup=(etc/mkinitcpio.conf.d/lisa.conf boot/extlinux/extlinux.conf)
+source=(
+	initcpio-hook-lisa-panel
+	initcpio-install-lisa-panel
+	linux-lisa.preset
+	95-lisa-mkbootimg.hook
+)
+sha256sums=(
+	'9b72eac084850261c0322138b95ce554b73851c58c6573fbbab2d2e762fe1bd5'
+	'cbbcf034e7c8cb00ab5719a41531365646d2e2b3b7476a68af74a1fd248c174d'
+	'a9ecf889a77d917e65b6359ac536d81959b15a9a2071a4a74ddb8a128796fc87'
+	'4b3b416d5a6a32502d26643a504f83f7a04f5e20f0d69a7bf2efce09dd212480'
+)
+
+build_mkinitcpio_conf() {
+	local modules
+	modules=$(tr '\n' ' ' <"$LISA_BSP/initramfs/modules" | sed 's/ *$//')
+	cat <<CONF
+# Early boot modules: touch, panel and USB-C switch (from the pmOS device package).
+MODULES=($modules)
+# No autodetect: the image is built in a chroot on another machine.
+HOOKS=(base udev modconf lisa-panel block filesystems fsck)
+COMPRESSION="zstd"
+CONF
+}
+
+# Read by the U-Boot menu on boot_a (sysboot on the userdata partition). The
+# DTB comes from the ABL through U-Boot, so there is no fdt line.
+build_extlinux_conf() {
+	. "$LISA_COMMON/lisa.conf"
+	cat <<CONF
+timeout 1
+default arch
+menu title Arch Linux ARM
+
+label arch
+	kernel /boot/vmlinuz-linux-lisa
+	initrd /boot/initramfs-linux-lisa.img
+	append $LISA_CMDLINE_BASE $LISA_ROOT_CMDLINE
+CONF
+}
+
+package() {
+	local lib="$pkgdir/usr/lib/lisa"
+
+	install -Dm644 "$LISA_COMMON/lisa.conf" "$lib/lisa.conf"
+	install -Dm755 "$LISA_COMMON/mkbootimg-lisa.sh" "$lib/mkbootimg-lisa.sh"
+	install -Dm755 "$LISA_COMMON/lisa-mkbootimg" "$lib/lisa-mkbootimg"
+	install -Dm755 "$LISA_BSP/initramfs/panel-cycle.sh" "$lib/panel-cycle.sh"
+	install -d "$pkgdir/usr/bin"
+	ln -s /usr/lib/lisa/lisa-mkbootimg "$pkgdir/usr/bin/lisa-mkbootimg"
+	cp -a "$LISA_COMMON/rootfs/." "$pkgdir/"
+	cp -a "$LISA_BSP/rootfs/usr/share/alsa" "$pkgdir/usr/share/"
+
+	install -Dm644 initcpio-hook-lisa-panel "$pkgdir/usr/lib/initcpio/hooks/lisa-panel"
+	install -Dm644 initcpio-install-lisa-panel "$pkgdir/usr/lib/initcpio/install/lisa-panel"
+	install -Dm644 linux-lisa.preset "$pkgdir/etc/mkinitcpio.d/linux-lisa.preset"
+	build_mkinitcpio_conf | install -Dm644 /dev/stdin "$pkgdir/etc/mkinitcpio.conf.d/lisa.conf"
+	install -Dm644 95-lisa-mkbootimg.hook "$pkgdir/usr/share/libalpm/hooks/95-lisa-mkbootimg.hook"
+	build_extlinux_conf | install -Dm644 /dev/stdin "$pkgdir/boot/extlinux/extlinux.conf"
+}

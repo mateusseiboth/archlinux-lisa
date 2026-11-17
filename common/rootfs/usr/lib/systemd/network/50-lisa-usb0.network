@@ -1,0 +1,14 @@
+# The PC gets 172.16.42.2 and reaches the phone at 172.16.42.1, as on pmOS.
+[Match]
+Name=usb0
+
+[Network]
+Address=172.16.42.1/24
+DHCPServer=yes
+ConfigureWithoutCarrier=yes
+
+[DHCPServer]
+PoolOffset=2
+PoolSize=1
+EmitDNS=no
+EmitRouter=no

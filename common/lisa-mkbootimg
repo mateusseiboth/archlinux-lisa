@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Builds /boot/boot.img and /boot/vendor_boot.img from the kernel and initramfs
+# installed in a distro root. Runs from the package manager hooks on the phone
+# and inside the image build (with --root pointing at the rootfs).
+#
+#   lisa-mkbootimg [--root /] [--kernel-release <kver>]
+set -euo pipefail
+
+LIB_DIR=$(dirname "$(readlink -f "$0")")
+. "$LIB_DIR/lisa.conf"
+
+root=/
+kver=""
+
+# Where each distro's initramfs generator writes its image, in lookup order.
+initramfs_candidates() {
+	echo "boot/initramfs-linux-lisa.img" # Arch: mkinitcpio preset linux-lisa
+	echo "boot/initrd.img-$kver"         # Ubuntu: initramfs-tools
+}
+
+die() {
+	echo "lisa-mkbootimg: $*" >&2
+	exit 1
+}
+
+parse_args() {
+	while [ $# -gt 0 ]; do
+		[ $# -ge 2 ] || die "opção sem valor: $1"
+		case "$1" in
+		--root) root=$2 ;;
+		--kernel-release) kver=$2 ;;
+		*) die "opção desconhecida: $1" ;;
+		esac
+		shift 2
+	done
+}
+
+find_newest_kernel_release() {
+	local newest
+	newest=$(find "$root/usr/lib/modules" -mindepth 2 -maxdepth 2 -name vmlinuz -printf '%h\n' 2>/dev/null |
+		xargs -r -n1 basename | sort -V | tail -n 1)
+	[ -n "$newest" ] || die "nenhum kernel instalado em $root/usr/lib/modules"
+	echo "$newest"
+}
+
+find_initramfs() {
+	local candidate
+	for candidate in $(initramfs_candidates); do
+		[ -f "$root/$candidate" ] && { echo "$root/$candidate"; return; }
+	done
+	die "nenhum initramfs para o kernel $kver em $root/boot"
+}
+
+read_cmdline() {
+	local file="$root/etc/lisa/cmdline"
+	[ -f "$file" ] || { echo "$LISA_ROOT_CMDLINE"; return; }
+	tr '\n' ' ' <"$file" | sed 's/ *$//'
+}
+
+parse_args "$@"
+[ -n "$kver" ] || kver=$(find_newest_kernel_release)
+
+modules="$root/usr/lib/modules/$kver"
+[ -f "$modules/vmlinuz" ] || die "kernel $kver não encontrado em $modules"
+
+bash "$LIB_DIR/mkbootimg-lisa.sh" \
+	--kernel "$modules/vmlinuz" \
+	--dtb "$modules/dtbs/qcom/$LISA_DTB_NAME" \
+	--ramdisk "$(find_initramfs)" \
+	--cmdline "$(read_cmdline)" \
+	--out "$root/boot"

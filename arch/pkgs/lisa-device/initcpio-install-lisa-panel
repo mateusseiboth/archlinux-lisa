@@ -1,0 +1,10 @@
+#!/bin/bash
+
+build() {
+	add_file /usr/lib/lisa/panel-cycle.sh /usr/lib/lisa/panel-cycle.sh 755
+	add_runscript
+}
+
+help() {
+	echo "Power-cycles the lisa DSI link once the msm framebuffer appears, so the panel lights up."
+}
