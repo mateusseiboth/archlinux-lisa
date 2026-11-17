@@ -4,7 +4,7 @@
 # arch/build.sh exports LISA_BSP and LISA_COMMON (the repository common/ dir).
 pkgname=lisa-device
 pkgver=1
-pkgrel=1
+pkgrel=2
 pkgdesc="Device support for the Xiaomi 11 Lite 5G NE"
 arch=(aarch64)
 url="https://github.com/mateusseiboth/xiaomi-lisa-mainline"
@@ -43,6 +43,8 @@ build_mkinitcpio_conf() {
 MODULES=($modules)
 # No autodetect: the image is built in a chroot on another machine.
 HOOKS=(base udev modconf lisa-panel block filesystems fsck)
+# The GPU probes before the root is mounted: its firmware has to be in the initramfs.
+FILES=(/usr/lib/firmware/updates/qcom/a660_sqe.fw /usr/lib/firmware/updates/qcom/a660_gmu.bin /usr/lib/firmware/updates/qcom/sm7325/xiaomi/lisa/a660_zap.mbn)
 COMPRESSION="zstd"
 CONF
 }

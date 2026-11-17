@@ -1,8 +1,10 @@
 # archlinux-lisa
 
 Arch Linux ARM for the Xiaomi 11 Lite 5G NE / 11 LE (`lisa`, Snapdragon 778G
-SM7325) on the mainline kernel. Plasma Mobile and Phosh are both installed and
-picked on the login screen.
+SM7325) on the mainline kernel. Plasma Mobile and Phosh are both installed.
+The phone logs straight into Plasma Mobile, which starts on its lock screen
+(numeric keypad); SDDM's own greeter is not usable on a phone. To start Phosh
+instead, set `Session=phosh` in `/etc/sddm.conf.d/20-autologin.conf`.
 
 The kernel, DTB and firmware are the ones of the postmarketOS port in
 [xiaomi-lisa-mainline](https://github.com/mateusseiboth/xiaomi-lisa-mainline),
@@ -37,9 +39,9 @@ accepts, byte-identical to what pmOS builds.
 | `common/extract-bsp.sh` | Kernel, DTB, modules, firmware and device files out of the pmbootstrap packages, into `out/bsp/` |
 | `common/mkbootimg-lisa.sh` | boot.img + vendor_boot.img for the stock ABL |
 | `common/lisa-mkbootimg` | The same from inside the installed system (pacman hook) |
-| `common/rootfs/` | USB network gadget (172.16.42.1) and first-boot growth of the rootfs to the whole userdata |
+| `common/rootfs/` | USB network gadget (172.16.42.1), first-boot growth of the rootfs to the whole userdata, Power key left to the shell |
 | `arch/pkgs/` | PKGBUILDs: `linux-lisa`, `lisa-firmware`, `lisa-device`, and the Qualcomm services Arch Linux ARM does not ship (`qrtr`, `rmtfs`, `tqftpserv`, `qbootctl`) |
-| `arch/ui/` | Image components: `base`, `sddm` (Wayland login with on-screen keyboard and session picker), `plasma-mobile`, `phosh` |
+| `arch/ui/` | Image components: `base`, `sddm` (display manager on Wayland), `plasma-mobile` (autologin, locked at start), `phosh` |
 | `arch/build.sh` | The image builder (Docker, Arch Linux ARM tarball, qemu-user chroot) |
 | `tests/` | `bash tests/run.sh` |
 

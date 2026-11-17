@@ -103,11 +103,21 @@ install_packages() {
 	pacman -D --asexplicit "${NATIVE_PKGS[@]}"
 }
 
+# Overlay files may name the phone user as @LISA_USER@ (SDDM autologin).
+fill_user_placeholder() {
+	local overlay=$1 file
+	grep -rl '@LISA_USER@' "$overlay" | while read -r file; do
+		sed -i "s/@LISA_USER@/$LISA_USER/g" "/${file#"$overlay"/}"
+	done
+}
+
 apply_ui_overlays() {
 	local component overlay
 	for component in $(components); do
 		overlay=$SRC/arch/ui/$component/rootfs
-		[ ! -d "$overlay" ] || cp -a "$overlay/." /
+		[ -d "$overlay" ] || continue
+		cp -a "$overlay/." /
+		fill_user_placeholder "$overlay"
 	done
 }
 

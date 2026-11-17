@@ -3,8 +3,9 @@
 #
 #   arch/build.sh [component...]     (default: sddm plasma-mobile phosh)
 #
-# Components live in arch/ui/: sddm (Wayland login screen with session picker),
-# plasma-mobile, phosh. With no display manager the image boots to a text login.
+# Components live in arch/ui/: sddm (display manager on Wayland), plasma-mobile
+# (autologin, locked at start), phosh. With no display manager the image boots to
+# a text login.
 #
 # Output in out/arch/: rootfs.img (ext4 for userdata), boot.img, vendor_boot.img,
 # dtbo.img. Needs Docker and the qemu-aarch64 binfmt handler (flag F) on the host.
